@@ -63,8 +63,10 @@ public class ServerAuthenticationStateProvider(ILocalStorageService storage, IAp
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 
-    public Task Logout()
+    public async Task Logout()
     {
-        throw new NotImplementedException();
+        await api.Logout();
+
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 }

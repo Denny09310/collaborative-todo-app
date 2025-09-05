@@ -44,6 +44,7 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
 
         accessToken.Value = response.AccessToken;
         accessToken.ExpireAt = response.AccessExpiry;
+        accessToken.IsRevoked = false;
 
         db.Tokens.Update(accessToken);
 
@@ -59,6 +60,7 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
 
         refreshToken.Value = response.RefreshToken;
         refreshToken.ExpireAt = response.RefreshExpiry;
+        refreshToken.IsRevoked = false;
 
         db.Tokens.Update(refreshToken);
 
@@ -71,8 +73,21 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
             .FirstOrDefaultAsync(x => x.Purpose == nameof(TokenRequest.RefreshToken)
                                    && x.UserId == req.UserId);
 
-        if (token is null || token.ExpireAt < DateTime.UtcNow)
+        if (token == null)
+        {
+            AddError(r => r.RefreshToken, "Refresh token does not exists!");
+            return;
+        }
+
+        if (token.ExpireAt < DateTime.UtcNow)
+        {
             AddError(r => r.RefreshToken, "Refresh token is invalid!");
+
+            token.IsRevoked = true;
+
+            db.Tokens.Update(token);
+            await db.SaveChangesAsync();
+        }
     }
 
     public override async Task SetRenewalPrivilegesAsync(TokenRequest request, UserPrivileges privileges)

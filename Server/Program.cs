@@ -4,6 +4,7 @@ using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Server;
 using Server.Data;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Services.SwaggerDocument(options =>
     options.ShortSchemaNames = true;
 });
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
@@ -44,6 +45,11 @@ app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
+
+app.UseMiddleware<JwtRevocationService>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapFastEndpoints(options =>
 {

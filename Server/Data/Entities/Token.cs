@@ -8,6 +8,8 @@ public class Token
 
     public DateTime ExpireAt { get; set; }
 
+    public bool IsRevoked { get; set; }
+
     #region Navigation Properties
 
     public string UserId { get; set; } = default!;
