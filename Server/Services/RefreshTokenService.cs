@@ -17,7 +17,7 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
 
         Setup(o =>
         {
-            o.TokenSigningKey = config["TokenSigningKey"];
+            o.TokenSigningKey = config["Authentication:Jwt:Key"];
             o.AccessTokenValidity = TimeSpan.FromMinutes(5);
             o.RefreshTokenValidity = TimeSpan.FromHours(4);
 

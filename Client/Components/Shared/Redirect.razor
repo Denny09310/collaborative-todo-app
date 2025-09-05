@@ -1,0 +1,24 @@
+﻿@inject NavigationManager Navigation
+
+@code
+{
+    [Parameter]
+    [EditorRequired]
+    public string Href { get; set; }
+
+    [Parameter]
+    public bool CaptureUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Dictionary<string, object?> query = [];
+
+        if (CaptureUrl)
+        {
+            query.Add("ReturnUrl", Navigation.Uri);
+        }
+
+        var url = Navigation.GetUriWithQueryParameters(Href, query);
+        Navigation.NavigateTo(url);
+    }
+}

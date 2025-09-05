@@ -21,7 +21,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.Property(p => p.Id).ValueGeneratedOnAdd();
             entity.Property(p => p.Purpose).HasMaxLength(128);
-            entity.Property(p => p.Value).HasMaxLength(450);
         });
     }
 }
