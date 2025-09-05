@@ -1,20 +1,39 @@
 ﻿using FastEndpoints;
+using FastEndpoints.Security;
 using FastEndpoints.Swagger;
+using Microsoft.EntityFrameworkCore;
 using Server;
+using Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddFastEndpoints(options =>
 {
     options.SourceGeneratorDiscoveredTypes.AddRange(DiscoveredTypes.All);
 });
-builder.Services.SwaggerDocument();
+builder.Services.SwaggerDocument(options =>
+{
+    options.ShortSchemaNames = true;
+});
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthenticationJwtBearer(options =>
+{
+    options.SigningKey = builder.Configuration["Authentication:Jwt:Key"];
+});
+
+builder.Services.Configure<JwtCreationOptions>(options =>
+{
+    options.SigningKey = builder.Configuration["Authentication:Jwt:Key"]!;
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -29,6 +48,8 @@ app.UseStaticFiles();
 app.MapFastEndpoints(options =>
 {
     options.Endpoints.RoutePrefix = "api";
+    options.Endpoints.ShortNames = true;
+    options.Errors.UseProblemDetails();
 });
 app.MapFallbackToFile("index.html");
 
