@@ -2,7 +2,6 @@
 using FastEndpoints.Security;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
-using Server.Data.Entities;
 using System.Security.Claims;
 
 namespace Server.Services;
@@ -33,21 +32,35 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
 
     public override async Task PersistTokenAsync(TokenResponse response)
     {
-        db.Tokens.Add(new Token
+        var accessToken = await db.Tokens
+            .FirstOrDefaultAsync(x => x.UserId == response.UserId
+                                   && x.Purpose == nameof(TokenResponse.AccessToken));
+
+        accessToken ??= new()
         {
             UserId = response.UserId,
             Purpose = nameof(TokenResponse.AccessToken),
-            Value = response.AccessToken,
-            ExpireAt = response.AccessExpiry,
-        });
+        };
 
-        db.Tokens.Add(new Token
+        accessToken.Value = response.AccessToken;
+        accessToken.ExpireAt = response.AccessExpiry;
+
+        db.Tokens.Update(accessToken);
+
+        var refreshToken = await db.Tokens
+            .FirstOrDefaultAsync(x => x.UserId == response.UserId
+                                   && x.Purpose == nameof(TokenResponse.RefreshToken));
+
+        refreshToken ??= new()
         {
             UserId = response.UserId,
             Purpose = nameof(TokenResponse.RefreshToken),
-            Value = response.RefreshToken,
-            ExpireAt = response.RefreshExpiry,
-        });
+        };
+
+        refreshToken.Value = response.RefreshToken;
+        refreshToken.ExpireAt = response.RefreshExpiry;
+
+        db.Tokens.Update(refreshToken);
 
         await db.SaveChangesAsync();
     }
@@ -58,7 +71,7 @@ public class RefreshTokenService : RefreshTokenService<TokenRequest, TokenRespon
             .FirstOrDefaultAsync(x => x.Purpose == nameof(TokenRequest.RefreshToken)
                                    && x.UserId == req.UserId);
 
-        if (token is null || token.ExpireAt <= DateTime.UtcNow)
+        if (token is null || token.ExpireAt < DateTime.UtcNow)
             AddError(r => r.RefreshToken, "Refresh token is invalid!");
     }
 

@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "3.0",
   "defaultProvider": "jsdelivr",
   "libraries": [
@@ -7,6 +7,19 @@
       "destination": "wwwroot/lib/preline/",
       "files": [
         "preline.min.js"
+      ]
+    },
+    {
+      "library": "toastify-js@1.12.0",
+      "destination": "wwwroot/lib/toastify/",
+      "fileMappings": [
+        {
+          "root": "src",
+          "files": [
+            "toastify.css",
+            "toastify.min.js"
+          ]
+        }
       ]
     }
   ]

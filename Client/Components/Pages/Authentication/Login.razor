@@ -2,8 +2,9 @@
 @using System.ComponentModel.DataAnnotations
 @attribute [AllowAnonymous]
 
-@inject NavigationManager NavigationManager
-@inject IAccountManagement AccountManagement
+@inject IAccountManagement Account
+@inject NavigationManager Navigation
+@inject ToastService Toast
 
 <div class="flex min-h-screen items-center justify-center">
     <div class="mt-7 min-w-sm rounded-xl border-gray-200 bg-white shadow-2xs md:min-w-md md:border dark:border-neutral-700 dark:bg-neutral-900">
@@ -84,12 +85,12 @@
     {
         try
         {
-            await AccountManagement.LoginAsync(Input.Email, Input.Password);
-            NavigationManager.NavigateTo(ReturnUrl ?? NavigationManager.BaseUri);
+            await Account.LoginAsync(Input.Email, Input.Password);
+            Navigation.NavigateTo(ReturnUrl ?? Navigation.BaseUri);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // This exception can be ignored
+            await Toast.ErrorAsync(ex.Message);
         }
     }
 

@@ -2,7 +2,8 @@
 @using System.ComponentModel.DataAnnotations
 @attribute [AllowAnonymous]
 
-@inject NavigationManager NavigationManager
+@inject NavigationManager Navigation
+@inject ToastService Toast
 @inject IApiClient Api
 
 <div class="flex min-h-screen items-center justify-center">
@@ -90,10 +91,12 @@
 
         if (!response.IsSuccessful)
         {
+            var errors = await response.Error.GetContentAsAsync<ProblemDetails>();
+            await Toast.ErrorAsync(errors!.Errors.First().Reason);
             return;
         }
 
-        NavigationManager.NavigateTo("authentication/login");
+        Navigation.NavigateTo("authentication/login");
     }
 
     private sealed class InputModel

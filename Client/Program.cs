@@ -22,4 +22,6 @@ builder.Services.ConfigureRefitClients(new Uri(builder.HostEnvironment.BaseAddre
 builder.Services.AddTransient<TokenHandler>();
 builder.Services.AddBlazoredLocalStorage();
 
+builder.Services.AddScoped<ToastService>();
+
 await builder.Build().RunAsync();
