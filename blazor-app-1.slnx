@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Services/">
+    <Project Path="Infrastructure/Infrastructure.csproj" />
+    <Project Path="Server/Server.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="Client/Client.csproj" />
+</Solution>

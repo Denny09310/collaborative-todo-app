@@ -1,0 +1,19 @@
+﻿[*.cs]
+
+# S6966: Awaitable method should be used
+dotnet_diagnostic.S6966.severity = none
+
+[{*.har,*.json}]
+indent_size = 2
+
+[*.{received,verified}.{txt,xml,json}]
+charset = "utf-8-bom"
+end_of_line = lf
+indent_size = unset
+indent_style = unset
+insert_final_newline = false
+tab_width = unset
+trim_trailing_whitespace = false
+
+[{*Request.cs,*Response.cs,*Model*.cs,*Endpoint.cs}]
+dotnet_diagnostic.CS8618.severity = none
