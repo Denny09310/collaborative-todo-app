@@ -6,8 +6,9 @@ public static class Endpoints
 {
     public static IEndpointRouteBuilder MapApiEndpoints(this IEndpointRouteBuilder builder)
     {
+        builder.MapIdentityEndpoints();
+
         var group = builder.MapGroup("/api");
-        group.MapIdentityEndpoints();
         return group;
     }
 }

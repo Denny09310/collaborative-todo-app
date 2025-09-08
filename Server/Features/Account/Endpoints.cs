@@ -9,8 +9,8 @@ public static class Endpoints
 {
     public static void MapIdentityEndpoints(this IEndpointRouteBuilder builder)
     {
-        var group = builder.MapGroup("/identity")
-            .WithTags("Identity");
+        var group = builder.MapGroup("/account")
+            .WithTags("Account");
 
         group.MapIdentityApi<ApplicationUser>();
 
@@ -39,7 +39,7 @@ public static class Endpoints
     {
         var properties = signInManager.ConfigureExternalAuthenticationProperties(
             provider,
-            $"/api/identity/external-login/callback?returnUrl={returnUrl}");
+            $"/account/external-login/callback?returnUrl={returnUrl}");
 
         return Results.Challenge(properties, [provider]);
     }
@@ -74,7 +74,16 @@ public static class Endpoints
             await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
             // Option A: Redirect to returnUrl if this is a browser flow
-            return Results.Redirect(returnUrl);
+            return Results.LocalRedirect($"~/{returnUrl}");
+        }
+
+        if (signInResult.IsLockedOut)
+        {
+            // Clear the external cookie
+            await context.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            // Option A: Redirect to returnUrl if this is a browser flow
+            return Results.LocalRedirect("~/account/lockout");
         }
 
         // Not linked: create a user or prompt for linking
@@ -125,7 +134,7 @@ public static class Endpoints
         await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
         // Redirect to the original return URL
-        return Results.Redirect(returnUrl);
+        return Results.LocalRedirect($"~/{returnUrl}");
     }
 
     private static IResult GetRoles(ClaimsPrincipal user)

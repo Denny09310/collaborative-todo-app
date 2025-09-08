@@ -58,7 +58,7 @@ namespace Client.Identity
             {
                 // make the request
                 var result = await httpClient.PostAsJsonAsync(
-                    "api/identity/register", new
+                    "account/register", new
                     {
                         email,
                         password
@@ -123,7 +123,7 @@ namespace Client.Identity
             {
                 // login with cookies
                 var result = await httpClient.PostAsJsonAsync(
-                    "api/identity/login?useCookies=true", new
+                    "account/login?useCookies=true", new
                     {
                         email,
                         password
@@ -153,13 +153,13 @@ namespace Client.Identity
         }
 
         /// <summary>
-        /// Get identity state.
+        /// Get account state.
         /// </summary>
         /// <remarks>
-        /// Called by Blazor anytime and identity-based decision needs to be made, then cached
+        /// Called by Blazor anytime and account-based decision needs to be made, then cached
         /// until the changed state notification is raised.
         /// </remarks>
-        /// <returns>The identity state asynchronous request.</returns>
+        /// <returns>The account state asynchronous request.</returns>
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             authenticated = false;
@@ -170,12 +170,12 @@ namespace Client.Identity
             try
             {
                 // the user info endpoint is secured, so if the user isn't logged in this will fail
-                using var userResponse = await httpClient.GetAsync("api/identity/manage/info");
+                using var userResponse = await httpClient.GetAsync("account/manage/info");
 
                 // throw if user info wasn't retrieved
                 userResponse.EnsureSuccessStatusCode();
 
-                // user is authenticated,so let's build their authenticated identity
+                // user is authenticated,so let's build their authenticated account
                 var userJson = await userResponse.Content.ReadAsStringAsync();
                 var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
 
@@ -194,7 +194,7 @@ namespace Client.Identity
                             .Select(c => new Claim(c.Key, c.Value)));
 
                     // request the roles endpoint for the user's roles
-                    using var rolesResponse = await httpClient.GetAsync("api/identity/roles");
+                    using var rolesResponse = await httpClient.GetAsync("account/roles");
 
                     // throw if request fails
                     rolesResponse.EnsureSuccessStatusCode();
@@ -240,7 +240,7 @@ namespace Client.Identity
         {
             const string Empty = "{}";
             var emptyContent = new StringContent(Empty, Encoding.UTF8, "application/json");
-            await httpClient.PostAsync("api/identity/logout", emptyContent);
+            await httpClient.PostAsync("account/logout", emptyContent);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 

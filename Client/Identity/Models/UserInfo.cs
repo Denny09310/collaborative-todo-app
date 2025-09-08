@@ -1,7 +1,7 @@
 ﻿namespace Client.Identity.Models
 {
     /// <summary>
-    /// User info from identity endpoint to establish claims.
+    /// User info from account endpoint to establish claims.
     /// </summary>
     public class UserInfo
     {
