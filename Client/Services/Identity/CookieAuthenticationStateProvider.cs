@@ -1,0 +1,251 @@
+﻿using Client.Models;
+using Microsoft.AspNetCore.Components.Authorization;
+using System.Net;
+using System.Net.Http.Json;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+
+namespace Client.Services;
+
+/// <summary>
+/// Handles state for cookie-based auth.
+/// </summary>
+/// <remarks>
+/// Create a new instance of the auth provider.
+/// </remarks>
+/// <param name="httpClientFactory">Factory to retrieve auth client.</param>
+public class CookieAuthenticationStateProvider(IHttpClientFactory httpClientFactory, ILogger<CookieAuthenticationStateProvider> logger)
+    : AuthenticationStateProvider, IAccountManagement
+{
+    /// <summary>
+    /// Special auth client.
+    /// </summary>
+    private readonly HttpClient httpClient = httpClientFactory.CreateClient("Auth");
+
+    /// <summary>
+    /// Map the JavaScript-formatted properties to C#-formatted classes.
+    /// </summary>
+    private readonly JsonSerializerOptions jsonSerializerOptions =
+        new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+
+    /// <summary>
+    /// Default principal for anonymous (not authenticated) users.
+    /// </summary>
+    private readonly ClaimsPrincipal unauthenticated = new(new ClaimsIdentity());
+
+    /// <summary>
+    /// Authentication state.
+    /// </summary>
+    private bool authenticated = false;
+
+    public async Task<bool> CheckAuthenticatedAsync()
+    {
+        await GetAuthenticationStateAsync();
+        return authenticated;
+    }
+
+    /// <summary>
+    /// Get account state.
+    /// </summary>
+    /// <remarks>
+    /// Called by Blazor anytime and account-based decision needs to be made, then cached
+    /// until the changed state notification is raised.
+    /// </remarks>
+    /// <returns>The account state asynchronous request.</returns>
+    public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+    {
+        authenticated = false;
+
+        // default to not authenticated
+        var user = unauthenticated;
+
+        try
+        {
+            // the user info endpoint is secured, so if the user isn't logged in this will fail
+            using var userResponse = await httpClient.GetAsync("account/manage/info");
+
+            // throw if user info wasn't retrieved
+            userResponse.EnsureSuccessStatusCode();
+
+            // user is authenticated,so let's build their authenticated account
+            var userJson = await userResponse.Content.ReadAsStringAsync();
+            var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
+
+            if (userInfo != null)
+            {
+                // in this example app, name and email are the same
+                var claims = new List<Claim>
+                {
+                    new(ClaimTypes.Name, userInfo.Email),
+                    new(ClaimTypes.Email, userInfo.Email),
+                };
+
+                // add any additional claims
+                claims.AddRange(
+                    userInfo.Claims.Where(c => c.Key != ClaimTypes.Name && c.Key != ClaimTypes.Email)
+                        .Select(c => new Claim(c.Key, c.Value)));
+
+                // request the roles endpoint for the user's roles
+                using var rolesResponse = await httpClient.GetAsync("account/roles");
+
+                // throw if request fails
+                rolesResponse.EnsureSuccessStatusCode();
+
+                // read the response into a string
+                var rolesJson = await rolesResponse.Content.ReadAsStringAsync();
+
+                // deserialize the roles string into an array
+                var roles = JsonSerializer.Deserialize<RoleClaim[]>(rolesJson, jsonSerializerOptions);
+
+                // add any roles to the claims collection
+                if (roles?.Length > 0)
+                {
+                    claims.AddRange(roles
+                        .Where(role => !string.IsNullOrEmpty(role.Type)
+                                    && !string.IsNullOrEmpty(role.Value))
+                            .Select(role => new Claim(role.Type, role.Value, role.ValueType, role.Issuer, role.OriginalIssuer)));
+                }
+
+                // set the principal
+                var id = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
+                user = new ClaimsPrincipal(id);
+                authenticated = true;
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException exception)
+        {
+            if (exception.StatusCode != HttpStatusCode.Unauthorized)
+            {
+                logger.LogError(ex, "App error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "App error");
+        }
+
+        // return the state
+        return new AuthenticationState(user);
+    }
+
+    /// <summary>
+    /// User login.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="password">The user's password.</param>
+    /// <returns>The result of the login request serialized to a <see cref="FormResult"/>.</returns>
+    public async Task<FormResult> LoginAsync(string email, string password)
+    {
+        try
+        {
+            // login with cookies
+            var result = await httpClient.PostAsJsonAsync(
+                "account/login?useCookies=true", new
+                {
+                    email,
+                    password
+                });
+
+            // success?
+            if (result.IsSuccessStatusCode)
+            {
+                // need to refresh auth state
+                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+
+                // success!
+                return new FormResult { Succeeded = true };
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "App error");
+        }
+
+        // unknown error
+        return new FormResult
+        {
+            Succeeded = false,
+            ErrorList = ["Invalid email and/or password."]
+        };
+    }
+
+    public async Task LogoutAsync()
+    {
+        const string Empty = "{}";
+        var emptyContent = new StringContent(Empty, Encoding.UTF8, "application/json");
+        await httpClient.PostAsync("account/logout", emptyContent);
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    /// <summary>
+    /// Register a new user.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="password">The user's password.</param>
+    /// <returns>The result serialized to a <see cref="FormResult"/>.
+    /// </returns>
+    public async Task<FormResult> RegisterAsync(string email, string password)
+    {
+        string[] defaultDetail = ["An unknown error prevented registration from succeeding."];
+
+        try
+        {
+            // make the request
+            var result = await httpClient.PostAsJsonAsync(
+                "account/register", new
+                {
+                    email,
+                    password
+                });
+
+            // successful?
+            if (result.IsSuccessStatusCode)
+            {
+                return new FormResult { Succeeded = true };
+            }
+
+            // body should contain details about why it failed
+            var details = await result.Content.ReadAsStringAsync();
+            var problemDetails = JsonDocument.Parse(details);
+            var errors = new List<string>();
+            var errorList = problemDetails.RootElement.GetProperty("errors");
+
+            foreach (var errorEntry in errorList.EnumerateObject().Select(x => x.Value))
+            {
+                if (errorEntry.ValueKind == JsonValueKind.String)
+                {
+                    errors.Add(errorEntry.GetString()!);
+                }
+                else if (errorEntry.ValueKind == JsonValueKind.Array)
+                {
+                    errors.AddRange(
+                        errorEntry.EnumerateArray().Select(
+                            e => e.GetString() ?? string.Empty)
+                        .Where(e => !string.IsNullOrEmpty(e)));
+                }
+            }
+
+            // return the error list
+            return new FormResult
+            {
+                Succeeded = false,
+                ErrorList = problemDetails == null ? defaultDetail : [.. errors]
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "App error");
+        }
+
+        // unknown error
+        return new FormResult
+        {
+            Succeeded = false,
+            ErrorList = defaultDetail
+        };
+    }
+}

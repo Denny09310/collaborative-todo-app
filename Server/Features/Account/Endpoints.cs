@@ -33,9 +33,9 @@ public static class Endpoints
     }
 
     private static IResult ExternalLogin(
+        SignInManager<ApplicationUser> signInManager,
         string provider,
-        string returnUrl,
-        SignInManager<ApplicationUser> signInManager)
+        string returnUrl = "")
     {
         var properties = signInManager.ConfigureExternalAuthenticationProperties(
             provider,
@@ -45,10 +45,10 @@ public static class Endpoints
     }
 
     private static async Task<IResult> ExternalLoginCallback(
-        string returnUrl,
         HttpContext context,
         SignInManager<ApplicationUser> signInManager,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        string returnUrl = "")
     {
         // Get the external login info from the Identity external cookie
         var info = await signInManager.GetExternalLoginInfoAsync();

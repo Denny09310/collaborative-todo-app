@@ -1,3 +1,41 @@
 ﻿@page "/"
 
-<h1>Hello world!</h1>
+@inject ProjectsApiClient Projects
+
+<button type="button" @onclick="CreateProjectAsync">Create Project</button>
+
+@if (projects is null)
+{
+    <em>Loading...</em>
+}
+else
+{
+    @foreach (var project in projects)
+    {
+        <div>@project.Id - @project.Name - @project.Description</div>
+    }   
+}
+
+@code
+{
+    private List<Project>? projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Projects.GetProjectsAsync();
+        projects = response?.Projects.ToList() ?? new List<Project>();
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        var response = await Projects.CreateProjectAsync(new("Test" + (projects?.Count + 1 ?? 1)));
+
+        if (response is null)
+        {
+            return;
+        }
+
+        projects ??= [];
+        projects.Add(response.ToModel());
+    }
+}

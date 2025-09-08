@@ -17,6 +17,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Project>(entity =>
         {
+            entity.Property(p => p.Id)
+                  .ValueGeneratedOnAdd();
+
             entity.Property(p => p.Name)
                   .IsRequired()
                   .HasMaxLength(100);
@@ -33,6 +36,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Todo>(entity =>
         {
+            entity.Property(p => p.Id)
+                  .ValueGeneratedOnAdd();
+
             entity.Property(t => t.Title)
                   .IsRequired()
                   .HasMaxLength(200);

@@ -1,4 +1,4 @@
-﻿namespace Client.Identity.Models;
+﻿namespace Client.Models;
 
 #nullable disable
 public class RoleClaim
