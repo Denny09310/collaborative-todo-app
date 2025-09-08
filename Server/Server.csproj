@@ -7,21 +7,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FastEndpoints" Version="7.0.1" />
-		<PackageReference Include="FastEndpoints.Generator" Version="7.0.1" PrivateAssets="all" />
-		<PackageReference Include="FastEndpoints.Security" Version="7.0.1" />
-		<PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+		<PackageReference Include="Scalar.AspNetCore.Microsoft" Version="2.7.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Client\Client.csproj" ReferenceOutputAssembly="false" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Features\Projects\Get\" />
 	</ItemGroup>
 
 </Project>

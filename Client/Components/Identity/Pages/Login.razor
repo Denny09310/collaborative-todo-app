@@ -1,20 +1,21 @@
-﻿@page "/authentication/register"
+﻿@page "/identity/login"
 @using System.ComponentModel.DataAnnotations
+@using Client.Identity.Models
 @attribute [AllowAnonymous]
 
+@inject IAccountManagement Account
 @inject NavigationManager Navigation
 @inject ToastService Toast
-@inject IApiClient Api
 
 <div class="flex min-h-screen items-center justify-center">
     <div class="mt-7 min-w-sm rounded-xl border-gray-200 bg-white shadow-2xs md:min-w-md md:border dark:border-neutral-700 dark:bg-neutral-900">
         <div class="p-4 sm:p-7">
             <div class="text-center">
-                <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign up</h1>
+                <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign in</h1>
                 <p class="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                    Already have an account?
-                    <a class="font-medium text-blue-600 decoration-2 hover:underline focus:underline focus:outline-hidden dark:text-blue-500" href="authentication/login">
-                        Sign in here
+                    Don't have an account yet?
+                    <a href="identity/register" class="font-medium text-blue-600 decoration-2 hover:underline focus:underline focus:outline-hidden dark:text-blue-500">
+                        Sign up here
                     </a>
                 </p>
             </div>
@@ -27,33 +28,31 @@
                         <path d="M10.1212 28.1413C9.62245 26.6725 9.32908 25.1156 9.32908 23.5C9.32908 21.8844 9.62245 20.3275 10.0918 18.8588V18.5356L2.75765 12.8369L2.52296 12.9544C0.909439 16.1269 0 19.7106 0 23.5C0 27.2894 0.909439 30.8731 2.49362 34.0456L10.1212 28.1413Z" fill="#FBBC05" />
                         <path d="M23.4694 9.07688C27.8699 9.07688 30.8622 10.9863 32.5344 12.5725L39.1645 6.11C35.0867 2.32063 29.8061 0 23.4694 0C14.287 0 6.36607 5.2875 2.49362 12.9544L10.0918 18.8588C11.9987 13.1894 17.25 9.07688 23.4694 9.07688Z" fill="#EB4335" />
                     </svg>
-                    Sign up with Google
+                    Sign in with Google
                 </button>
 
                 <div class="flex items-center py-3 text-xs text-gray-400 uppercase before:me-6 before:flex-1 before:border-t before:border-gray-200 after:ms-6 after:flex-1 after:border-t after:border-gray-200 dark:text-neutral-500 dark:before:border-neutral-600 dark:after:border-neutral-600">Or</div>
 
                 <!-- Form -->
                 <EditForm Model="@Input" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+
                     <div class="grid gap-y-4">
                         <!-- Form Group -->
                         <div>
-                            <label for="email" class="mb-2 block text-sm dark:text-white">Email address</label>
+                            <label for="email" class="mb-2 block text-sm dark:text-white">Email</label>
                             <InputText @bind-Value="Input.Email" type="email" id="email" class="block w-full rounded-lg border-gray-200 px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 sm:py-3 sm:text-sm dark:placeholder-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:focus:ring-neutral-600" aria-describedby="email-error" />
                             <ValidationMessage For="@(() => Input.Email)" class="mt-2 hidden text-xs text-red-600" id="email-error" />
                         </div>
                         <!-- End Form Group -->
                         <!-- Form Group -->
                         <div>
-                            <label for="password" class="mb-2 block text-sm dark:text-white">Password</label>
-                            <input type="password" id="password" class="block w-full rounded-lg border-gray-200 px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 sm:py-3 sm:text-sm dark:placeholder-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:focus:ring-neutral-600" aria-describedby="password-error" />
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label for="password" class="mb-2 block text-sm dark:text-white">Password</label>
+                                <a class="inline-flex items-center gap-x-1 text-sm font-medium text-blue-600 decoration-2 hover:underline focus:underline focus:outline-hidden dark:text-blue-500" href="../examples/html/recover-account.html">Forgot password?</a>
+                            </div>
+                            <InputText @bind-Value="Input.Password" type="password" id="password" class="block w-full rounded-lg border-gray-200 px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 sm:py-3 sm:text-sm dark:placeholder-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:focus:ring-neutral-600" aria-describedby="password-error" />
                             <ValidationMessage For="@(() => Input.Password)" class="mt-2 hidden text-xs text-red-600" id="password-error" />
-                        </div>
-                        <!-- End Form Group -->
-                        <!-- Form Group -->
-                        <div>
-                            <label for="confirm-password" class="mb-2 block text-sm dark:text-white">Confirm Password</label>
-                            <InputText @bind-Value="Input.ConfirmPassword" type="password" id="confirm-password" name="confirm-password" class="block w-full rounded-lg border-gray-200 px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 sm:py-3 sm:text-sm dark:placeholder-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:focus:ring-neutral-600" aria-describedby="confirm-password-error" />
-                            <ValidationMessage For="@(() => Input.ConfirmPassword)" class="mt-2 hidden text-xs text-red-600" id="confirm-password-error" />
                         </div>
                         <!-- End Form Group -->
                         <!-- Checkbox -->
@@ -62,12 +61,12 @@
                                 <input id="remember-me" name="remember-me" type="checkbox" class="mt-0.5 shrink-0 rounded-sm border-gray-200 text-blue-600 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:checked:border-blue-500 dark:checked:bg-blue-500 dark:focus:ring-offset-gray-800">
                             </div>
                             <div class="ms-3">
-                                <label for="remember-me" class="text-sm dark:text-white">I accept the <a class="font-medium text-blue-600 decoration-2 hover:underline focus:underline focus:outline-hidden dark:text-blue-500" href="#">Terms and Conditions</a></label>
+                                <label for="remember-me" class="text-sm dark:text-white">Remember me</label>
                             </div>
                         </div>
                         <!-- End Checkbox -->
 
-                        <button type="submit" class="inline-flex w-full items-center justify-center gap-x-2 rounded-lg border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:bg-blue-700 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50">Sign up</button>
+                        <button type="submit" class="inline-flex w-full items-center justify-center gap-x-2 rounded-lg border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:bg-blue-700 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50">Sign in</button>
                     </div>
                 </EditForm>
                 <!-- End Form -->
@@ -76,40 +75,34 @@
     </div>
 </div>
 
-@code
+@code 
 {
+    [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    private async Task HandleValidSubmit()
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    public async Task HandleValidSubmit()
     {
-        using var response = await Api.Register(new()
-        {
-            Email = Input.Email,
-            Username = Input.Email,
-            Password = Input.Password,
-        });
+        var result = await Account.LoginAsync(Input.Email, Input.Password);
 
-        if (!response.IsSuccessful)
+        if (result.Succeeded && !string.IsNullOrEmpty(ReturnUrl))
         {
-            var errors = await response.Error.GetContentAsAsync<ProblemDetails>();
-            await Toast.ErrorAsync(errors!.Errors.First().Reason);
-            return;
+            Navigation.NavigateTo(ReturnUrl);
         }
-
-        Navigation.NavigateTo("authentication/login");
     }
 
     private sealed class InputModel
     {
         [Required]
-        public string Email { get; set; } = "";
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(128, MinimumLength = 4)]
-        public string Password { get; set; } = "";
-
-        [Required]
-        [Compare(nameof(Password))]
-        public string ConfirmPassword { get; set; } = "";
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = string.Empty;
     }
 }

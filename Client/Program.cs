@@ -1,6 +1,5 @@
-﻿using Blazored.LocalStorage;
-using Client.Components;
-using Client.Services;
+﻿using Client.Components;
+using Client.Identity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -9,19 +8,27 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+// register the cookie handler
+builder.Services.AddTransient<CookieHandler>();
 
+// set up authorization
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<ServerAuthenticationStateProvider>();
 
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
-builder.Services.AddScoped<IAccountManagement>(sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
+// register the custom state provider
+builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
 
-builder.Services.ConfigureRefitClients(new Uri(builder.HostEnvironment.BaseAddress));
+// register the account management interface
+builder.Services.AddScoped(
+    sp => (IAccountManagement)sp.GetRequiredService<AuthenticationStateProvider>());
 
-builder.Services.AddTransient<TokenHandler>();
-builder.Services.AddBlazoredLocalStorage();
+// set base address for default host
+builder.Services.AddScoped(sp =>
+    new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-builder.Services.AddScoped<ToastService>();
+// configure client for auth interactions
+builder.Services.AddHttpClient(
+    "Auth",
+    opt => opt.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+    .AddHttpMessageHandler<CookieHandler>();
 
 await builder.Build().RunAsync();

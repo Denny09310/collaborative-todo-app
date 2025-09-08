@@ -1,44 +1,31 @@
-﻿using FastEndpoints;
-using FastEndpoints.Security;
-using FastEndpoints.Swagger;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Server;
+using Scalar.AspNetCore;
 using Server.Data;
-using Server.Services;
+using Server.Data.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddFastEndpoints(options =>
-{
-    options.SourceGeneratorDiscoveredTypes.AddRange(DiscoveredTypes.All);
-});
-builder.Services.SwaggerDocument(options =>
-{
-    options.ShortSchemaNames = true;
-});
+builder.Services.AddOpenApi();
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddAuthorization();
-builder.Services.AddAuthenticationJwtBearer(options =>
-{
-    options.SigningKey = builder.Configuration["Authentication:Jwt:Key"];
-});
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
-builder.Services.Configure<JwtCreationOptions>(options =>
-{
-    options.SigningKey = builder.Configuration["Authentication:Jwt:Key"]!;
-});
+builder.Services.AddAuthorizationBuilder();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
-    app.UseSwaggerGen();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
@@ -46,17 +33,7 @@ app.UseHttpsRedirection();
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
-app.UseMiddleware<JwtRevocationService>();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapFastEndpoints(options =>
-{
-    options.Endpoints.RoutePrefix = "api";
-    options.Endpoints.ShortNames = true;
-    options.Errors.UseProblemDetails();
-});
+app.MapApiEndpoints();
 app.MapFallbackToFile("index.html");
 
 app.Run();
