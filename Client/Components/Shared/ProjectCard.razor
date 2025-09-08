@@ -1,0 +1,38 @@
+﻿@inject IApiClient Api
+
+<div class="mb-6 rounded-xl bg-white p-5 shadow-lg">
+    <h3 class="text-lg font-bold">@Project.Name</h3>
+    <p class="mb-4 text-gray-500">@Project.Description</p>
+
+    <!-- Todo List -->
+    <ul class="space-y-2">
+        @foreach (var item in Project.Items)
+        {
+            <li class="flex items-center justify-between rounded-lg border p-2">
+                <span class="@((item.IsCompleted ? "line-through text-gray-400" : ""))">@item.Title</span>
+                @if (!item.IsCompleted)
+                {
+                    <button @onclick="() => CompleteTodo(item.Id)"
+                            class="text-sm px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                        Complete
+                    </button>
+                }
+            </li>
+        }
+    </ul>
+
+    <!-- Add Todo -->
+    <CreateTodoForm ProjectId="Project.Id" OnTodoCreated="OnTodoChanged" />
+</div>
+
+@code
+{
+    [Parameter] public ProjectDto Project { get; set; } = default!;
+    [Parameter] public EventCallback OnTodoChanged { get; set; }
+
+    private async Task CompleteTodo(string itemId)
+    {
+        await Api.CompleteItem(new() { ItemId = itemId });
+        await OnTodoChanged.InvokeAsync();
+    }
+}

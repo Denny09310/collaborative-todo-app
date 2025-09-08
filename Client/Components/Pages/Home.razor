@@ -1,7 +1,57 @@
 ﻿@page "/"
+@inject IApiClient Api
 
-<PageTitle>Home</PageTitle>
+<div class="mx-auto max-w-4xl p-6">
+    <h1 class="mb-6 text-3xl font-bold">Collaborative Todo</h1>
 
-<h1>Hello, world!</h1>
+    <!-- Create Project Form -->
+    <CreateProjectForm OnProjectCreated="LoadProjects" />
 
-Welcome to your new app.
+    <div class="mt-8">
+        @if (projects is null)
+        {
+            <p class="text-gray-600">Loading projects...</p>
+        }
+        else if (projects.Count == 0)
+        {
+            <p class="text-gray-600">No projects yet. Create one above!</p>
+        }
+        else
+        {
+            @foreach (var project in projects)
+            {
+                <ProjectCard Project="project" OnTodoChanged="LoadProjects" />
+            }
+        }
+    </div>
+</div>
+
+@code
+{
+    private List<ProjectDto>? projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjects();
+    }
+
+    private async Task LoadProjects()
+    {
+        var response = await Api.GetProjects();
+        projects = new(response.Content.Projects
+            .Select(project => new ProjectDto
+            (
+                project.Id, 
+                project.Name, 
+                project.Description, 
+                project.Items.Select(item => new ItemDto
+                (
+                    item.Id, 
+                    item.Title, 
+                    item.IsCompleted.Value
+                ))
+                .ToList()
+            )));
+        StateHasChanged();
+    }
+}
