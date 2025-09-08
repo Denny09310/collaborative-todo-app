@@ -1,5 +1,6 @@
 ﻿using Client.Components;
 using Client.Identity;
+using Client.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -30,5 +31,7 @@ builder.Services.AddHttpClient(
     "Auth",
     opt => opt.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
     .AddHttpMessageHandler<CookieHandler>();
+
+builder.Services.AddScoped<ToastService>();
 
 await builder.Build().RunAsync();

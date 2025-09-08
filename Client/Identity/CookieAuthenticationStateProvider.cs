@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 
 namespace Client.Identity
 {
@@ -207,13 +208,10 @@ namespace Client.Identity
                     // add any roles to the claims collection
                     if (roles?.Length > 0)
                     {
-                        foreach (var role in roles)
-                        {
-                            if (!string.IsNullOrEmpty(role.Type) && !string.IsNullOrEmpty(role.Value))
-                            {
-                                claims.Add(new Claim(role.Type, role.Value, role.ValueType, role.Issuer, role.OriginalIssuer));
-                            }
-                        }
+                        claims.AddRange(roles
+                            .Where(role => !string.IsNullOrEmpty(role.Type) 
+                                        && !string.IsNullOrEmpty(role.Value))
+                                .Select(role => new Claim(role.Type, role.Value, role.ValueType, role.Issuer, role.OriginalIssuer)));
                     }
 
                     // set the principal
