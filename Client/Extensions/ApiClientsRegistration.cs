@@ -4,7 +4,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ApiClientsRegistration
 {
-    public static IServiceCollection AddApiClients(this IServiceCollection services)
+    public static IServiceCollection AddClients(this IServiceCollection services)
     {
         services.AddScoped<ProjectsApiClient>();
         services.AddScoped<TodosApiClient>();

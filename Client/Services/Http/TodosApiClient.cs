@@ -12,7 +12,7 @@ public class TodosApiClient(IHttpClientFactory factory)
         return await http.GetFromJsonAsync<GetTodosResponse>("api/todos", ct);
     }
 
-    public async Task<TodoResponse?> GetTodoByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<TodoResponse?> GetTodoByIdAsync(string id, CancellationToken ct = default)
     {
         return await http.GetFromJsonAsync<TodoResponse>($"api/todos/{id}", ct);
     }
@@ -26,7 +26,7 @@ public class TodosApiClient(IHttpClientFactory factory)
         return await response.Content.ReadFromJsonAsync<TodoResponse>(cancellationToken: ct);
     }
 
-    public async Task<TodoResponse?> UpdateTodoAsync(Guid id, UpdateTodoRequest request, CancellationToken ct = default)
+    public async Task<TodoResponse?> UpdateTodoAsync(string id, UpdateTodoRequest request, CancellationToken ct = default)
     {
         var response = await http.PutAsJsonAsync($"api/todos/{id}", request, ct);
         if (!response.IsSuccessStatusCode)
@@ -35,7 +35,7 @@ public class TodosApiClient(IHttpClientFactory factory)
         return await response.Content.ReadFromJsonAsync<TodoResponse>(cancellationToken: ct);
     }
 
-    public async Task<bool> DeleteTodoAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteTodoAsync(string id, CancellationToken ct = default)
     {
         var response = await http.DeleteAsync($"api/todos/{id}", ct);
         return response.IsSuccessStatusCode;

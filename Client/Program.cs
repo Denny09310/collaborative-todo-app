@@ -31,7 +31,8 @@ builder.Services.AddHttpClient(
     opt => opt.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
     .AddHttpMessageHandler<CookieHandler>();
 
-builder.Services.AddApiClients();
+
+builder.Services.AddClients();
 
 builder.Services.AddScoped<ToastService>();
 
